@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter }  from 'next/navigation';
 import Link           from 'next/link';
 import { Eye, EyeOff, LogIn, Phone, Mail, RefreshCw } from 'lucide-react';
@@ -16,6 +16,36 @@ const GOOGLE_CLIENT_ID  = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID  || '';
 const FACEBOOK_APP_ID   = process.env.NEXT_PUBLIC_FACEBOOK_APP_ID   || '';
 const hasGoogle   = !!GOOGLE_CLIENT_ID && !GOOGLE_CLIENT_ID.includes('your_');
 const hasFacebook = !!FACEBOOK_APP_ID  && !FACEBOOK_APP_ID.includes('your_');
+
+// Loads the Facebook SDK once and resolves only after FB.init has run
+let fbPromise: Promise<void> | null = null;
+function loadFacebookSdk(): Promise<void> {
+  if (fbPromise) return fbPromise;
+  fbPromise = new Promise<void>((resolve, reject) => {
+    const init = () => {
+      window.FB.init({
+        appId: FACEBOOK_APP_ID, cookie: true,
+        xfbml: false, version: 'v19.0',
+      });
+      resolve();
+    };
+
+    if (window.FB) { init(); return; }
+
+    window.fbAsyncInit = init;
+    const s = document.createElement('script');
+    s.id = 'fb-sdk';
+    s.src = 'https://connect.facebook.net/en_US/sdk.js';
+    s.async = true;
+    s.crossOrigin = 'anonymous';
+    s.onerror = () => {
+      fbPromise = null;
+      reject(new Error('Facebook SDK bloqué (adblock ?)'));
+    };
+    document.body.appendChild(s);
+  });
+  return fbPromise;
+}
 
 export default function LoginPage() {
   const { login, loginWithGoogle, loginWithFacebook } = useAuth();
@@ -63,24 +93,6 @@ export default function LoginPage() {
     },
   }[lang];
 
-  // ── Load Facebook SDK ──────────────────────────────────────────────────────
-  useEffect(() => {
-    if (!hasFacebook) return;
-    window.fbAsyncInit = () => {
-      window.FB.init({
-        appId: FACEBOOK_APP_ID, cookie: true,
-        xfbml: true, version: 'v18.0',
-      });
-    };
-    if (!document.getElementById('fb-sdk')) {
-      const s = document.createElement('script');
-      s.id = 'fb-sdk';
-      s.src = 'https://connect.facebook.net/en_US/sdk.js';
-      s.async = true; s.crossOrigin = 'anonymous';
-      document.body.appendChild(s);
-    }
-  }, []);
-
   // ── After successful login ─────────────────────────────────────────────────
   const onSuccess = async () => {
     const token = localStorage.getItem('el_token');
@@ -90,7 +102,7 @@ export default function LoginPage() {
         wishlist.loadFromServer(token),
       ]);
     }
-    router.back();
+    router.push('/');
   };
 
   // ── Email / phone login ────────────────────────────────────────────────────
@@ -109,22 +121,8 @@ export default function LoginPage() {
 
   // ── Google login ───────────────────────────────────────────────────────────
   const handleGoogle = () => {
-    if (!hasGoogle) {
-      setError('Google login non configuré'); return;
-    }
+    if (!hasGoogle) { setError('Google login non configuré'); return; }
     setGLoading(true); setError('');
-
-    // Load Google Identity Services dynamically
-    const loadAndLogin = () => {
-      if (!window.google) {
-        const s = document.createElement('script');
-        s.src = 'https://accounts.google.com/gsi/client';
-        s.onload = () => openGooglePopup();
-        document.body.appendChild(s);
-      } else {
-        openGooglePopup();
-      }
-    };
 
     const openGooglePopup = () => {
       const client = window.google.accounts.oauth2.initTokenClient({
@@ -140,33 +138,61 @@ export default function LoginPage() {
           if (err) { setError(err); return; }
           await onSuccess();
         },
+        error_callback: () => {
+          setError('Fenêtre Google fermée ou bloquée');
+          setGLoading(false);
+        },
       });
       client.requestAccessToken();
     };
 
-    loadAndLogin();
+    if (!window.google) {
+      const s = document.createElement('script');
+      s.src = 'https://accounts.google.com/gsi/client';
+      s.onload = () => openGooglePopup();
+      s.onerror = () => { setError('Google SDK bloqué'); setGLoading(false); };
+      document.body.appendChild(s);
+    } else {
+      openGooglePopup();
+    }
   };
 
   // ── Facebook login ─────────────────────────────────────────────────────────
-  const handleFacebook = () => {
-    if (!hasFacebook) {
-      setError('Facebook login non configuré'); return;
-    }
-    if (!window.FB) { setError('Facebook SDK pas encore chargé'); return; }
+  const handleFacebook = async () => {
+    if (!hasFacebook) { setError('Facebook login non configuré'); return; }
     setFbLoading(true); setError('');
 
-    window.FB.login(async (response: any) => {
-      if (response.authResponse) {
-        const { accessToken, userID } = response.authResponse;
-        const err = await loginWithFacebook(accessToken, userID);
-        setFbLoading(false);
-        if (err) { setError(err); return; }
-        await onSuccess();
-      } else {
-        setError('Connexion Facebook annulée');
-        setFbLoading(false);
+    // Safety net: never spin forever
+    const safety = setTimeout(() => {
+      setFbLoading(false);
+      setError('Facebook n\'a pas répondu. Autorisez les popups et réessayez.');
+    }, 60000);
+    const done = () => { clearTimeout(safety); setFbLoading(false); };
+
+    try {
+      await loadFacebookSdk();
+    } catch (e: any) {
+      done(); setError(e.message || 'Facebook SDK indisponible'); return;
+    }
+
+    window.FB.login((response: any) => {
+      console.log('FB.login response:', response);
+
+      if (!response?.authResponse) {
+        done();
+        setError('Connexion Facebook annulée ou refusée');
+        return;
       }
-    }, { scope: 'email,public_profile' });
+
+      const { accessToken, userID } = response.authResponse;
+      loginWithFacebook(accessToken, userID)
+        .then(async (err) => {
+          done();
+          if (err) { setError(err); return; }
+          await onSuccess();
+        })
+        .catch(() => { done(); setError('Erreur serveur Facebook'); });
+    }, { scope: 'public_profile,email' });
   };
 
   const showSocial = hasGoogle || hasFacebook;
@@ -186,7 +212,6 @@ export default function LoginPage() {
         </div>
 
         <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8">
-          {/* Error */}
           {error && (
             <div className="mb-5 p-3.5 bg-red-50 border border-red-100
                             rounded-2xl text-red-600 text-sm">
@@ -194,7 +219,6 @@ export default function LoginPage() {
             </div>
           )}
 
-          {/* Social buttons */}
           {showSocial && (
             <>
               <div className="space-y-3 mb-6">
@@ -241,7 +265,6 @@ export default function LoginPage() {
                 )}
               </div>
 
-              {/* Divider */}
               <div className="flex items-center gap-3 mb-6">
                 <div className="flex-1 h-px bg-gray-200" />
                 <span className="text-gray-400 text-xs font-medium">{t.or}</span>
@@ -250,7 +273,6 @@ export default function LoginPage() {
             </>
           )}
 
-          {/* Email / phone form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <div className="relative">
@@ -304,7 +326,6 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* Links */}
           <div className="mt-6 text-center space-y-3">
             <p className="text-sm text-gray-500">
               {t.noAccount}{' '}
@@ -313,7 +334,7 @@ export default function LoginPage() {
                 {t.register}
               </Link>
             </p>
-            <button onClick={() => router.back()}
+            <button onClick={() => router.push('/')}
               className="text-xs text-gray-400 hover:text-gray-600 transition">
               {t.guest}
             </button>
