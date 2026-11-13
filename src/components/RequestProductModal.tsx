@@ -22,7 +22,7 @@ interface Props {
 }
 
 export default function RequestProductModal({ open, query, startAtForm, onClose }: Props) {
-  const { user, token } = useAuth();
+  const { user, token, logout } = useAuth();
   const { lang }        = useLang();
   const fileRef         = useRef<HTMLInputElement>(null);
 
@@ -68,6 +68,7 @@ export default function RequestProductModal({ open, query, startAtForm, onClose 
       send: 'Envoyer la demande', cancel: 'Annuler',
       loginMsg: "Connectez-vous pour faire une demande et suivre la réponse de notre équipe.",
       login: 'Se connecter',
+      expired: 'Votre session a expiré. Veuillez vous reconnecter.',
       doneTitle: 'Demande envoyée !',
       doneMsg: 'Notre équipe va l\'étudier. Vous verrez la réponse dans « Mes demandes ».',
       ok: 'OK', seeMine: 'Mes demandes',
@@ -87,6 +88,7 @@ export default function RequestProductModal({ open, query, startAtForm, onClose 
       send: 'Send request', cancel: 'Cancel',
       loginMsg: "Sign in to send a request and follow our team's reply.",
       login: 'Sign in',
+      expired: 'Your session has expired. Please sign in again.',
       doneTitle: 'Request sent!',
       doneMsg: 'Our team will review it. You will see the reply in "My requests".',
       ok: 'OK', seeMine: 'My requests',
@@ -106,6 +108,7 @@ export default function RequestProductModal({ open, query, startAtForm, onClose 
       send: 'إرسال الطلب', cancel: 'إلغاء',
       loginMsg: 'سجّل الدخول لإرسال طلب ومتابعة رد فريقنا.',
       login: 'تسجيل الدخول',
+      expired: 'انتهت جلستك. يرجى تسجيل الدخول مرة أخرى.',
       doneTitle: 'تم إرسال الطلب!',
       doneMsg: 'سيقوم فريقنا بدراسته. سترى الرد في «طلباتي».',
       ok: 'حسناً', seeMine: 'طلباتي',
@@ -148,8 +151,14 @@ export default function RequestProductModal({ open, query, startAtForm, onClose 
         searchQuery: query.trim(),
       }, token);
       setStep('done');
-    } catch (err) {
-      setError(apiError(err, 'Erreur'));
+    } catch (err: any) {
+      if (err?.response?.status === 401) {
+        // Old/invalid session: sign out so the modal shows the sign-in prompt
+        logout();
+        setError(t.expired);
+      } else {
+        setError(apiError(err, 'Erreur'));
+      }
     }
     setSending(false);
   };
@@ -212,7 +221,9 @@ export default function RequestProductModal({ open, query, startAtForm, onClose 
                                   flex items-center justify-center">
                     <LogIn size={28} className="text-blue-700" />
                   </div>
-                  <p className="text-gray-600 text-sm mb-6">{t.loginMsg}</p>
+                  <p className={`text-sm mb-6 ${error ? 'text-red-600' : 'text-gray-600'}`}>
+                    {error || t.loginMsg}
+                  </p>
                   <Link href={loginHref}
                     className="inline-flex items-center gap-2 px-6 py-3 bg-blue-700 text-white
                                font-bold rounded-2xl text-sm hover:bg-blue-800 transition">
