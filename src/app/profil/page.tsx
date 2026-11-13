@@ -6,7 +6,7 @@ import Link                     from 'next/link';
 import {
   User, ShoppingBag, Heart, LogOut, Package,
   ChevronRight, Clock, MapPin, Phone, Mail,
-  ShoppingCart, Check, X as XIcon, RefreshCw,
+  ShoppingCart, Check, X as XIcon, RefreshCw, PackageSearch,
 } from 'lucide-react';
 import { useAuth }     from '@/context/AuthContext';
 import { useCart }     from '@/context/CartContext';
@@ -14,8 +14,9 @@ import { useWishlist } from '@/context/WishlistContext';
 import { useLang }     from '@/context/LangContext';
 import { formatPrice } from '@/lib/utils';
 import API             from '@/lib/api';
+import MyRequests      from '@/components/MyRequests';
 
-type Tab = 'profile' | 'orders' | 'wishlist' | 'cart';
+type Tab = 'profile' | 'orders' | 'wishlist' | 'cart' | 'requests';
 
 export default function ProfilPage() {
   const { user, token, logout, isAdmin } = useAuth();
@@ -27,6 +28,13 @@ export default function ProfilPage() {
   const [tab,     setTab]     = useState<Tab>('profile');
   const [orders,  setOrders]  = useState<any[]>([]);
   const [ordLoad, setOrdLoad] = useState(true);
+  const [reqCount, setReqCount] = useState(0);
+
+  // /profil?tab=requests opens a tab directly
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search).get('tab');
+    if (q && ['profile', 'orders', 'wishlist', 'cart', 'requests'].includes(q)) setTab(q as Tab);
+  }, []);
 
   useEffect(() => {
     if (!user) { router.push('/login'); return; }
@@ -116,6 +124,9 @@ export default function ProfilPage() {
     { key: 'orders',   label: t.orders,   icon: <ShoppingBag size={16} />, badge: orders.length },
     { key: 'wishlist', label: t.wishlist, icon: <Heart size={16} />, badge: wishlist.count },
     { key: 'cart',     label: t.cart,     icon: <ShoppingCart size={16} />, badge: cart.count },
+    { key: 'requests',
+      label: lang === 'fr' ? 'Demandes' : lang === 'en' ? 'Requests' : 'طلباتي',
+      icon: <PackageSearch size={16} />, badge: reqCount },
   ];
 
   return (
@@ -590,6 +601,11 @@ export default function ProfilPage() {
           )}
         </div>
       )}
+
+      {/* REQUESTS TAB — always mounted so the badge count loads */}
+      <div className={tab === 'requests' ? '' : 'hidden'}>
+        <MyRequests token={token} onCount={setReqCount} />
+      </div>
     </div>
   );
 }
