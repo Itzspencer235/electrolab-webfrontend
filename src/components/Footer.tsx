@@ -22,7 +22,7 @@ export default function Footer() {
   }[lang];
 
   return (
-    <footer className="bg-blue-950 text-white mt-20">
+    <footer className="bg-blue-950 text-white">
       <div className="max-w-7xl mx-auto px-4 py-14 grid grid-cols-1 md:grid-cols-3 gap-10">
 
         {/* Brand */}
@@ -32,7 +32,7 @@ export default function Footer() {
               src={logo}
               alt="IP ElectroLab"
               height={50}
-              className="h-10 w-auto brightness-0 invert" /* invert makes it white on dark bg */
+              className="h-12 w-auto rounded-xl ring-1 ring-white/20" /* logo has its own blue background */
             />
           </Link>
           <p className="text-blue-200 text-sm leading-relaxed">{t.desc}</p>

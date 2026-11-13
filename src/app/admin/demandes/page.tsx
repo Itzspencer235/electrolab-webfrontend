@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import Link  from 'next/link';
 import {
-  ArrowLeft, RefreshCw, Clock, User, AtSign, Search, Smartphone, Globe,
+  PackageSearch, RefreshCw, Clock, User, AtSign, Search, Smartphone, Globe,
   Reply, Trash2, X, Link2, Unlink, Loader2, Cpu, MessageSquare,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
@@ -16,6 +16,7 @@ import {
 import {
   REQUEST_STATUSES, requestStatusLabel, requestStatusColor, productName,
 } from '@/lib/requests';
+import { PageHeader, btnGhost } from '@/components/admin/ui';
 
 type Filter = 'all' | RequestStatus;
 
@@ -33,15 +34,15 @@ export default function AdminRequestsPage() {
   const [zoom,     setZoom]     = useState<string | null>(null);
 
   const t = {
-    fr: { title: 'Demandes de produits', back: 'Administration', refresh: 'Actualiser',
+    fr: { title: 'Demandes de produits', refresh: 'Actualiser',
           all: 'Toutes', search: 'Rechercher (produit, client)...', empty: 'Aucune demande',
           reply: 'Répondre', del: 'Supprimer', confirmDel: 'Supprimer ?', yes: 'Oui', no: 'Non',
           searched: 'Recherche', price: 'Prix souhaité' },
-    en: { title: 'Product requests', back: 'Admin', refresh: 'Refresh',
+    en: { title: 'Product requests', refresh: 'Refresh',
           all: 'All', search: 'Search (product, customer)...', empty: 'No requests',
           reply: 'Reply', del: 'Delete', confirmDel: 'Delete?', yes: 'Yes', no: 'No',
           searched: 'Searched', price: 'Intended price' },
-    ar: { title: 'طلبات المنتجات', back: 'الإدارة', refresh: 'تحديث',
+    ar: { title: 'طلبات المنتجات', refresh: 'تحديث',
           all: 'الكل', search: 'بحث (منتج، عميل)...', empty: 'لا توجد طلبات',
           reply: 'رد', del: 'حذف', confirmDel: 'حذف؟', yes: 'نعم', no: 'لا',
           searched: 'بحث', price: 'السعر المقترح' },
@@ -79,19 +80,13 @@ export default function AdminRequestsPage() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8">
-      <Link href="/admin"
-        className="inline-flex items-center gap-1.5 text-sm text-blue-700 font-semibold hover:underline mb-4">
-        <ArrowLeft size={14} /> {t.back}
-      </Link>
-
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-        <h1 className="text-3xl font-black text-gray-800">{t.title}</h1>
-        <button onClick={load}
-          className="flex items-center gap-1.5 text-sm text-blue-700 hover:underline font-semibold">
-          <RefreshCw size={14} /> {t.refresh}
-        </button>
-      </div>
+    <div>
+      <PageHeader title={t.title} icon={<PackageSearch size={22} />}
+        actions={
+          <button onClick={load} className={btnGhost}>
+            <RefreshCw size={14} /> {t.refresh}
+          </button>
+        } />
 
       <div className="relative mb-4">
         <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
