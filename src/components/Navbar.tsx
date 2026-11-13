@@ -1,11 +1,11 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import {
   Menu, X, ShoppingCart, Heart, Globe,
-  User, LogOut, ChevronDown,
+  User, LogOut, ChevronDown, ShieldCheck,
 } from 'lucide-react';
 import { useLang }     from '@/context/LangContext';
 import { useAuth }     from '@/context/AuthContext';
@@ -23,6 +23,11 @@ export default function Navbar() {
   const router   = useRouter();
   const [mobileOpen,   setMobileOpen]   = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [langOpen,     setLangOpen]     = useState(false);
+  const pathname = usePathname();
+
+  // Close menus when navigating
+  useEffect(() => { setMobileOpen(false); setUserMenuOpen(false); setLangOpen(false); }, [pathname]);
 
   const links = NAV_LINKS[lang];
 
@@ -51,7 +56,7 @@ export default function Navbar() {
         </Link>
 
         {/* Desktop nav links */}
-        <div className="hidden md:flex items-center gap-1 flex-1 justify-center">
+        <div className="hidden lg:flex items-center gap-1 flex-1 justify-center">
           {links.map(l => (
             <Link key={l.href} href={l.href}
               className="px-3 py-2 rounded-lg text-sm font-medium text-gray-600
@@ -65,17 +70,19 @@ export default function Navbar() {
         <div className="flex items-center gap-1">
 
           {/* Language switcher */}
-          <div className="relative group">
-            <button className="flex items-center gap-1 px-2 py-2 rounded-lg
+          <div className="relative hidden sm:block">
+            <button onClick={() => setLangOpen(o => !o)} aria-expanded={langOpen}
+              className="flex items-center gap-1 px-2 py-2 rounded-lg
                                text-sm text-gray-600 hover:bg-blue-50 transition">
               <Globe size={15} />
               <span className="uppercase font-bold text-xs">{lang}</span>
             </button>
-            <div className="absolute right-0 top-full mt-1 bg-white border border-gray-100
-                            rounded-xl shadow-lg py-1 w-36 opacity-0 invisible
-                            group-hover:opacity-100 group-hover:visible transition-all z-50">
+            {langOpen && <div className="fixed inset-0 z-40" onClick={() => setLangOpen(false)} />}
+            <div className={`absolute right-0 top-full mt-1 bg-white border border-gray-100
+                            rounded-xl shadow-lg py-1 w-36 transition-all z-50
+                            ${langOpen ? 'opacity-100 visible' : 'opacity-0 invisible'}`}>
               {(['fr', 'en', 'ar'] as Lang[]).map(l => (
-                <button key={l} onClick={() => setLang(l)}
+                <button key={l} onClick={() => { setLang(l); setLangOpen(false); }}
                   className={`block w-full px-4 py-2 text-sm text-left hover:bg-blue-50
                               ${lang === l ? 'text-blue-700 font-bold' : 'text-gray-600'}`}>
                   {l === 'fr' ? '🇫🇷 Français' : l === 'en' ? '🇬🇧 English' : '🇸🇦 العربية'}
@@ -151,6 +158,13 @@ export default function Navbar() {
                                  hover:bg-blue-50 hover:text-blue-700 transition">
                       <ShoppingCart size={15} /> {t.orders}
                     </Link>
+                    {isAdmin && (
+                      <Link href="/admin" onClick={() => setUserMenuOpen(false)}
+                        className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700
+                                   hover:bg-blue-50 hover:text-blue-700 transition">
+                        <ShieldCheck size={15} /> {t.admin}
+                      </Link>
+                    )}
                     <button onClick={() => { logout(); setUserMenuOpen(false); router.push('/'); }}
                       className="flex items-center gap-2 w-full px-4 py-2.5 text-sm
                                  text-red-500 hover:bg-red-50 transition">
@@ -171,7 +185,8 @@ export default function Navbar() {
 
           {/* Mobile toggle */}
           <button onClick={() => setMobileOpen(!mobileOpen)}
-            className="md:hidden p-2 rounded-lg hover:bg-blue-50 transition">
+            aria-label="Menu" aria-expanded={mobileOpen}
+            className="lg:hidden p-2 rounded-lg hover:bg-blue-50 transition">
             {mobileOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
         </div>
@@ -179,14 +194,39 @@ export default function Navbar() {
 
       {/* Mobile menu */}
       {mobileOpen && (
-        <div className="md:hidden bg-white border-t border-gray-100 px-4 py-3 space-y-1">
+        <div className="lg:hidden bg-white border-t border-gray-100 px-4 py-3 space-y-1
+                        max-h-[calc(100vh-4rem)] overflow-y-auto shadow-lg">
           {links.map(l => (
             <Link key={l.href} href={l.href} onClick={() => setMobileOpen(false)}
-              className="block px-4 py-3 rounded-xl text-gray-700
-                         hover:bg-blue-50 hover:text-blue-700 font-medium transition">
+              className={`block px-4 py-3 rounded-xl font-medium transition
+                ${pathname === l.href ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'}`}>
               {l.label}
             </Link>
           ))}
+          {user && (
+            <>
+              <Link href="/profil" onClick={() => setMobileOpen(false)}
+                className="flex items-center gap-2 px-4 py-3 rounded-xl text-gray-700 hover:bg-blue-50 hover:text-blue-700 font-medium transition">
+                <User size={16} /> {t.profile}
+              </Link>
+              {isAdmin && (
+                <Link href="/admin" onClick={() => setMobileOpen(false)}
+                  className="flex items-center gap-2 px-4 py-3 rounded-xl text-gray-700 hover:bg-blue-50 hover:text-blue-700 font-medium transition">
+                  <ShieldCheck size={16} /> {t.admin}
+                </Link>
+              )}
+            </>
+          )}
+          {/* Language (the header switcher is hidden on small phones) */}
+          <div className="flex gap-2 px-1 pt-2">
+            {(['fr', 'en', 'ar'] as Lang[]).map(l => (
+              <button key={l} onClick={() => setLang(l)}
+                className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition
+                  ${lang === l ? 'bg-blue-700 text-white' : 'bg-gray-100 text-gray-600 hover:bg-blue-50'}`}>
+                {l === 'fr' ? '🇫🇷 FR' : l === 'en' ? '🇬🇧 EN' : '🇸🇦 AR'}
+              </button>
+            ))}
+          </div>
           {!user && (
             <Link href="/login" onClick={() => setMobileOpen(false)}
               className="block px-4 py-3 rounded-xl bg-blue-700 text-white
