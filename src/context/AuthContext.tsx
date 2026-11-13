@@ -39,9 +39,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setToken(t);
         setUser(JSON.parse(u));
         API.defaults.headers.common['Authorization'] = `Bearer ${t}`;
+        // Sign out if the saved token no longer matches an account (e.g. deleted).
+        // Network errors / server waking up keep the session.
+        API.get('/users/profile', { headers: { Authorization: `Bearer ${t}` } })
+          .catch(e => {
+            const s = e?.response?.status;
+            if ((s === 401 || s === 404) && localStorage.getItem('el_token') === t) logout();
+          });
       }
     } catch {}
     setLoading(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const saveSession = (token: string, user: User) => {

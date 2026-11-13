@@ -102,7 +102,9 @@ export default function LoginPage() {
         wishlist.loadFromServer(token),
       ]);
     }
-    router.push('/');
+    // ?next=/some/path brings the user back where they were (same-site paths only)
+    const next = new URLSearchParams(window.location.search).get('next');
+    router.push(next && next.startsWith('/') && !next.startsWith('//') ? next : '/');
   };
 
   // ── Email / phone login ────────────────────────────────────────────────────
