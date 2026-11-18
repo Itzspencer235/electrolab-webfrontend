@@ -50,8 +50,11 @@ export async function sendChat(
 }
 
 // ── Orders ────────────────────────────────────────────────────────────────────
-export async function createOrder(orderData: Record<string, unknown>) {
-  const { data } = await API.post('/orders', orderData);
+// The server sets prices, total and status itself; the token (when signed
+// in) links the order to the account.
+export async function createOrder(orderData: Record<string, unknown>, token?: string | null) {
+  const { data } = await API.post('/orders', orderData,
+    token ? { headers: { Authorization: `Bearer ${token}` } } : undefined);
   return data;
 }
 

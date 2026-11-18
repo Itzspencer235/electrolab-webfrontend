@@ -540,10 +540,8 @@ function OrderModal({ product, lang, user, token, onClose }: {
           quantity: qty,
           price:    product.price,
         }],
-        totalPrice: total,
         note:       note.trim(),
-        status:     'pending',
-      });
+      }, token);
       setSuccess(true);
     } catch {
       setError('Erreur lors de la commande. Réessayez.');

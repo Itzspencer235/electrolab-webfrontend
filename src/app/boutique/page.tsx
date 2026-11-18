@@ -21,7 +21,7 @@ function BoutiqueContent() {
   const [allNames,    setAllNames]    = useState<string[] | null>(null);
   const [modal,       setModal]       = useState({ open: false, query: '', startAtForm: false });
   const promptedRef = useRef('');   // show the popup only once per search term
-  const timerRef    = useRef<ReturnType<typeof setTimeout>>();
+  const timerRef    = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const t = {
     fr: { title: 'Boutique', search: 'Rechercher un produit...', all: 'Tous', results: 'produit(s)',

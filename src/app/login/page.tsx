@@ -104,7 +104,9 @@ export default function LoginPage() {
     }
     // ?next=/some/path brings the user back where they were (same-site paths only)
     const next = new URLSearchParams(window.location.search).get('next');
-    router.push(next && next.startsWith('/') && !next.startsWith('//') ? next : '/');
+    // Browsers treat "\" like "/", so "/\evil.com" would leave the site too
+    const safe = next && /^\/(?![\/\\])/.test(next) && !next.includes('\\');
+    router.push(safe ? next : '/');
   };
 
   // ── Email / phone login ────────────────────────────────────────────────────

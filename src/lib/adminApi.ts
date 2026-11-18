@@ -103,6 +103,21 @@ export async function deleteUser(id: string, token: string) {
   return data;
 }
 
+// ── Notifications ─────────────────────────────────────────────────────────────
+export type NotifyTarget = 'all' | 'customers' | 'user';
+export async function getNotifyStatus(token: string): Promise<{ push: boolean; email: boolean }> {
+  const { data } = await API.get('/notifications/admin/status', auth(token));
+  return data;
+}
+export async function sendNotification(
+  body: { target: NotifyTarget; userId?: string; title: string; body: string;
+          channels: { inApp: boolean; push: boolean; email: boolean } },
+  token: string,
+): Promise<{ users: number; inApp: number; push: number; emailQueued: number }> {
+  const { data } = await API.post('/notifications/admin/send', body, auth(token));
+  return data;
+}
+
 // ── Auto-translate (Gemini, server side) ──────────────────────────────────────
 export async function translate(
   text: string, sourceLang: Lang, fieldContext: string, token: string,
