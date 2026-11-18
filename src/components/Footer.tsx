@@ -65,7 +65,7 @@ export default function Footer() {
             </li>
             <li className="flex items-center gap-2">
               <Phone size={15} className="text-blue-400 shrink-0" />
-              <a href={`https://wa.me/${WHATSAPP_NUMBER}`} className="hover:text-white transition">
+              <a href={`https://wa.me/${WHATSAPP_NUMBER.replace(/[^\d]/g, '')}`} className="hover:text-white transition">
                 {WHATSAPP_NUMBER}
               </a>
             </li>

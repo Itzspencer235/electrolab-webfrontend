@@ -1035,7 +1035,7 @@ export default function HomePage() {
             <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-4">{t.ctaTitle}</h2>
             <p className="text-gray-400 text-lg mb-10 leading-relaxed">{t.ctaSub}</p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <a href={`https://wa.me/${WHATSAPP_NUMBER}`} target="_blank" rel="noreferrer"
+              <a href={`https://wa.me/${WHATSAPP_NUMBER.replace(/[^\d]/g, '')}`} target="_blank" rel="noreferrer"
                 className="inline-flex items-center gap-3 px-8 py-4 bg-green-500 hover:bg-green-600 text-white font-black
                            text-base rounded-2xl shadow-xl shadow-green-100 transition hover:-translate-y-0.5">
                 <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">

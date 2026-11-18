@@ -1,5 +1,10 @@
-export const whatsappUrl = (msg: string) =>
-  `https://wa.me/23500000000?text=${encodeURIComponent(msg)}`;
+import { WHATSAPP_NUMBER } from '@/lib/constants';
+
+/** wa.me wants digits only (no + or spaces). */
+export const WHATSAPP_DIGITS = WHATSAPP_NUMBER.replace(/[^\d]/g, '');
+
+export const whatsappUrl = (msg?: string) =>
+  `https://wa.me/${WHATSAPP_DIGITS}${msg ? `?text=${encodeURIComponent(msg)}` : ''}`;
 
 export const formatPrice = (p: number) =>
   new Intl.NumberFormat('fr-FR').format(p) + ' FCFA';

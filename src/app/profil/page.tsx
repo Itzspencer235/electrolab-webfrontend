@@ -12,7 +12,7 @@ import { useAuth }     from '@/context/AuthContext';
 import { useCart }     from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { useLang }     from '@/context/LangContext';
-import { formatPrice } from '@/lib/utils';
+import { formatPrice, WHATSAPP_DIGITS } from '@/lib/utils';
 import API             from '@/lib/api';
 import MyRequests      from '@/components/MyRequests';
 
@@ -586,7 +586,7 @@ export default function ProfilPage() {
                   </span>
                 </div>
                 {/* Order via WhatsApp */}
-                <a href={`https://wa.me/23500000000?text=${encodeURIComponent(
+                <a href={`https://wa.me/${WHATSAPP_DIGITS}?text=${encodeURIComponent(
                   cart.items.map(i =>
                     `• ${i.name} x${i.quantity} = ${i.price * i.quantity} FCFA`
                   ).join('\n') + `\n\nTotal: ${cart.total} FCFA`
