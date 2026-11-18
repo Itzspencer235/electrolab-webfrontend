@@ -34,6 +34,7 @@ export interface ProductInput {
   sampleCode: string; codeLanguage: string;
   price: number; stock: number; category: string;
   imageUrl: string; images: string[]; circuitImages: string[];
+  discountPercent?: number; discountStartsAt?: string | null; discountEndsAt?: string | null;
 }
 export async function getProductFull(id: string, token: string) {
   const { data } = await API.get(`/products/${id}/full`, auth(token));
@@ -144,3 +145,20 @@ export const ORDER_STATUSES: OrderStatus[] = ['pending', 'confirmed', 'delivered
 /** Tiny helper for the three-language strings used across the admin. */
 export const tr = (lang: Lang, fr: string, en: string, ar: string) =>
   lang === 'en' ? en : lang === 'ar' ? ar : fr;
+
+// ── Sales & pop-ups ───────────────────────────────────────────────────────────
+export type MarketingKind = 'sales' | 'promotions';
+export async function adminList(what: MarketingKind, token: string): Promise<any[]> {
+  const { data } = await API.get(`/${what}`, auth(token));
+  return data;
+}
+export async function adminSave(what: MarketingKind, body: any, token: string, id?: string) {
+  const { data } = id
+    ? await API.put(`/${what}/${id}`, body, auth(token))
+    : await API.post(`/${what}`, body, auth(token));
+  return data;
+}
+export async function adminRemove(what: MarketingKind, id: string, token: string) {
+  const { data } = await API.delete(`/${what}/${id}`, auth(token));
+  return data;
+}

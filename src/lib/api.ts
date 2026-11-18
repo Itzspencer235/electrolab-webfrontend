@@ -206,3 +206,27 @@ export async function uploadImage(file: File, folder = 'ipelectrolab/requests'):
 export function apiError(e: any, fallback = 'Erreur'): string {
   return e?.response?.data?.message || fallback;
 }
+
+// ── Sales & pop-up promotions ─────────────────────────────────────────────────
+export interface ActiveSale {
+  _id: string; title: string; percent: number;
+  scope: 'all' | 'categories'; categories: string[]; endsAt: string | null;
+}
+export async function getActiveSales(lang = 'fr'): Promise<ActiveSale[]> {
+  const { data } = await API.get(`/sales/active?lang=${lang}`);
+  return data;
+}
+
+export interface ActivePromotion {
+  _id: string; kind: 'sale' | 'info' | 'partner'; title: string; body: string; imageUrl: string;
+  ctaLabel: string; ctaType: 'none' | 'shop' | 'product' | 'category' | 'url'; ctaValue: string;
+  frequency: 'every_visit' | 'daily' | 'once'; endsAt: string | null; version: number;
+}
+export async function getActivePromotions(lang = 'fr'): Promise<ActivePromotion[]> {
+  const { data } = await API.get(`/promotions/active?platform=web&lang=${lang}`);
+  return data;
+}
+/** Counts a view or a button click for the admin stats (fire and forget). */
+export function trackPromotion(id: string, what: 'view' | 'click') {
+  API.post(`/promotions/${id}/${what}`).catch(() => {});
+}

@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
-  Info, Image as ImageIcon, FileText, SlidersHorizontal, Code2, Save, Loader2, Plus, Trash2, ArrowLeft, Package,
+  Info, Image as ImageIcon, FileText, SlidersHorizontal, Code2, Save, Loader2, Plus, Trash2, ArrowLeft, Package, Percent,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useLang } from '@/context/LangContext';
@@ -18,6 +18,15 @@ import {
 } from '@/components/admin/ui';
 
 const CODE_LANGS = ['cpp', 'python', 'javascript', 'other'];
+
+/** ISO date → value for <input type="datetime-local"> (local time). */
+const toLocalInput = (iso?: string | null) => {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+};
 const ML_FIELDS = ['description', 'workingPrinciple', 'features', 'specifications', 'applications', 'howToUse'] as const;
 
 const blank = (): ProductInput => ({
@@ -38,6 +47,9 @@ export default function ProductForm({ id }: { id?: string }) {
 
   const [p,       setP]       = useState<ProductInput>(blank);
   const [price,   setPrice]   = useState('');
+  const [discount, setDiscount] = useState('');
+  const [dStart,   setDStart]   = useState('');   // datetime-local value
+  const [dEnd,     setDEnd]     = useState('');
   const [stock,   setStock]   = useState('');
   const [cats,    setCats]    = useState<string[]>([]);
   const [loading, setLoading] = useState(editing);
@@ -60,6 +72,8 @@ export default function ProductForm({ id }: { id?: string }) {
         imageUrl: d.imageUrl || '', images: d.images || [], circuitImages: d.circuitImages || [],
       });
       setPrice(String(d.price ?? '')); setStock(String(d.stock ?? ''));
+      setDiscount(d.discountPercent ? String(d.discountPercent) : '');
+      setDStart(toLocalInput(d.discountStartsAt)); setDEnd(toLocalInput(d.discountEndsAt));
       setLoading(false);
     }).catch(e => { setError(apiError(e, 'Erreur')); setLoading(false); });
   }, [id, token]);
@@ -80,6 +94,9 @@ export default function ProductForm({ id }: { id?: string }) {
       name: withFallback(p.name),
       ...Object.fromEntries(ML_FIELDS.map(f => [f, withFallback(p[f])])),
       price: Number(price),
+      discountPercent: Math.min(90, Math.max(0, parseInt(discount || '0', 10) || 0)),
+      discountStartsAt: dStart ? new Date(dStart).toISOString() : null,
+      discountEndsAt:   dEnd ? new Date(dEnd).toISOString() : null,
       stock: Math.max(0, parseInt(stock || '0', 10) || 0),
       category: p.category.trim(),
       sampleCode: p.sampleCode.trim(),
@@ -138,6 +155,35 @@ export default function ProductForm({ id }: { id?: string }) {
                 <datalist id="product-cats">{cats.map(c => <option key={c} value={c} />)}</datalist>
               </label>
             </div>
+          </Section>
+
+          <Section title={tr(lang, 'Promotion sur ce produit', 'Discount on this product', 'تخفيض على هذا المنتج')} icon={<Percent size={16} />}>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <label className="block">
+                <Label>{tr(lang, 'Réduction (%)', 'Discount (%)', 'التخفيض (٪)')}</Label>
+                <input value={discount} onChange={e => setDiscount(e.target.value.replace(/[^0-9]/g, '').slice(0, 2))}
+                  inputMode="numeric" placeholder="0" className={inputCls} />
+              </label>
+              <label className="block">
+                <Label>{tr(lang, 'À partir du (optionnel)', 'From (optional)', 'من (اختياري)')}</Label>
+                <input type="datetime-local" value={dStart} onChange={e => setDStart(e.target.value)} className={inputCls} />
+              </label>
+              <label className="block">
+                <Label>{tr(lang, 'Jusqu\'au (optionnel)', 'Until (optional)', 'حتى (اختياري)')}</Label>
+                <input type="datetime-local" value={dEnd} onChange={e => setDEnd(e.target.value)} className={inputCls} />
+              </label>
+            </div>
+            {Number(discount) > 0 && Number(price) > 0 && (
+              <p className="text-sm font-semibold text-red-600">
+                {tr(lang, 'Prix affiché', 'Price shown', 'السعر المعروض')} : {Math.round(Number(price) * (100 - Math.min(90, Number(discount))) / 100).toLocaleString('fr-FR')} FCFA
+                <span className="text-gray-400 line-through ml-2">{Number(price).toLocaleString('fr-FR')} FCFA</span>
+              </p>
+            )}
+            <p className="text-xs text-gray-400">
+              {tr(lang, 'Si une promotion sur toute la boutique est plus forte, c\'est elle qui s\'applique. Max 90%.',
+                'If a site-wide sale is bigger, the bigger discount applies. Max 90%.',
+                'إذا كان هناك تخفيض أكبر على كل المتجر فسيُطبّق الأكبر. الحد الأقصى 90٪.')}
+            </p>
           </Section>
 
           <Section title={tr(lang, 'Images', 'Images', 'الصور')} icon={<ImageIcon size={16} />}>

@@ -10,6 +10,7 @@ import {
 import { useLang } from '@/context/LangContext';
 import { getProducts, getTutorials, getCategories } from '@/lib/api';
 import ProductCard from '@/components/ProductCard';
+import DealsSection from '@/components/DealsSection';
 import { levelColor, levelLabel } from '@/lib/utils';
 import { WHATSAPP_NUMBER } from '@/lib/constants';
 
@@ -830,6 +831,9 @@ export default function HomePage() {
         </section>
 
         {/* ══ WHY US ══ */}
+        {/* Sale banner + discounted products (only when there are deals) */}
+        <DealsSection />
+
         <section ref={whyRef} className="max-w-7xl mx-auto px-4 py-20">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-3">{t.whyTitle}</h2>
