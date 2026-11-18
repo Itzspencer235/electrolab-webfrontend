@@ -67,7 +67,7 @@ export default function ContactPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
         {/* WhatsApp */}
-        <a href={`https://wa.me/${WHATSAPP_NUMBER}`} target="_blank" rel="noreferrer"
+        <a href={`https://wa.me/${WHATSAPP_NUMBER.replace(/[^\d]/g, '')}`} target="_blank" rel="noreferrer"
           className="flex items-center gap-4 p-6 bg-green-50 border border-green-100
                      rounded-2xl hover:bg-green-100 transition">
           <div className="w-12 h-12 bg-green-500 rounded-2xl flex items-center justify-center">
