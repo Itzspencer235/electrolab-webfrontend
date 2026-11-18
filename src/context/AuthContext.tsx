@@ -21,6 +21,10 @@ interface AuthCtx {
   logout:   () => void;
   isAdmin:  boolean;
   setOnLoginSuccess: (fn: (token: string) => void) => void;
+  /** Re-read the profile from the server (e.g. after adding a phone). */
+  refreshUser: () => Promise<void>;
+  /** Save a phone number on the account; returns an error message or null. */
+  updatePhone: (phone: string) => Promise<string | null>;
 }
 
 const Ctx = createContext<AuthCtx>({} as AuthCtx);
@@ -121,6 +125,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const applyProfile = (d: any) => {
+    if (!token || !user || !d) return;
+    const next: User = { ...user, name: d.name ?? user.name, email: d.email ?? user.email,
+      phone: d.phone || undefined, avatar: d.avatar ?? user.avatar, role: d.role ?? user.role };
+    setUser(next);
+    localStorage.setItem('el_user', JSON.stringify(next));
+  };
+
+  const refreshUser = async () => {
+    if (!token) return;
+    try { const { data } = await API.get('/users/profile', { headers: { Authorization: `Bearer ${token}` } }); applyProfile(data); }
+    catch {}
+  };
+
+  const updatePhone = async (phone: string) => {
+    if (!token) return 'Session expirée';
+    try {
+      const { data } = await API.put('/users/profile', { phone }, { headers: { Authorization: `Bearer ${token}` } });
+      applyProfile(data);
+      return null;
+    } catch (e: any) {
+      return e?.response?.data?.message || 'Erreur';
+    }
+  };
+
   const logout = () => {
     setUser(null); setToken(null);
     localStorage.removeItem('el_token');
@@ -136,6 +165,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       login, register, loginWithGoogle, loginWithFacebook,
       logout, isAdmin: user?.role === 'admin',
       setOnLoginSuccess: (fn) => { onLoginRef.current = fn; },
+      refreshUser, updatePhone,
     }}>
       {children}
     </Ctx.Provider>

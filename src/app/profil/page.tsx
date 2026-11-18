@@ -249,7 +249,6 @@ export default function ProfilPage() {
               {[
                 { label: t.name,  value: user.name,          icon: <User size={14} /> },
                 { label: t.email, value: user.email || '—',  icon: <Mail size={14} /> },
-                { label: t.phone, value: user.phone || '—',  icon: <Phone size={14} /> },
                 { label: t.role,  value: user.role,          icon: <Check size={14} /> },
               ].map((f, i) => (
                 <div key={i} className="flex items-start gap-3 pb-4
@@ -264,6 +263,8 @@ export default function ProfilPage() {
                   </div>
                 </div>
               ))}
+              {/* Phone: Google/Facebook accounts start without one */}
+              <PhoneRow lang={lang} />
             </div>
           </div>
 
@@ -605,6 +606,54 @@ export default function ProfilPage() {
       {/* REQUESTS TAB — always mounted so the badge count loads */}
       <div className={tab === 'requests' ? '' : 'hidden'}>
         <MyRequests token={token} onCount={setReqCount} />
+      </div>
+    </div>
+  );
+}
+function PhoneRow({ lang }: { lang: 'fr' | 'en' | 'ar' }) {
+  const { user, updatePhone } = useAuth();
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState(user?.phone || '');
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const t = (fr: string, en: string, ar: string) => (lang === 'en' ? en : lang === 'ar' ? ar : fr);
+
+  const save = async () => {
+    setSaving(true); setError(null);
+    const err = await updatePhone(value.trim());
+    setSaving(false);
+    if (err) setError(err); else setEditing(false);
+  };
+
+  return (
+    <div className="flex items-start gap-3 pt-4 border-t border-gray-100">
+      <div className="w-8 h-8 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600 shrink-0">
+        <Phone size={14} />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-xs text-gray-400 font-medium">{t('Téléphone', 'Phone', 'الهاتف')}</p>
+        {editing ? (
+          <div className="mt-1">
+            <div className="flex gap-2">
+              <input value={value} onChange={e => setValue(e.target.value)} autoFocus dir="ltr" inputMode="tel"
+                placeholder="+235 66 00 00 00"
+                className="flex-1 min-w-0 px-3 py-2 border border-gray-200 rounded-xl text-sm outline-none focus:border-blue-400" />
+              <button onClick={save} disabled={saving}
+                className="px-3 py-2 bg-blue-700 text-white text-sm font-bold rounded-xl disabled:opacity-60">
+                {t('OK', 'OK', 'حفظ')}
+              </button>
+            </div>
+            {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
+            <p className="text-xs text-gray-400 mt-1">{t('Utilisé pour la livraison de vos commandes.', 'Used to deliver your orders.', 'يُستخدم لتوصيل طلباتك.')}</p>
+          </div>
+        ) : (
+          <button onClick={() => { setValue(user?.phone || ''); setEditing(true); }}
+            className="text-sm font-semibold text-left hover:underline">
+            {user?.phone
+              ? <span className="text-gray-800">{user.phone} <span className="text-blue-600 text-xs">· {t('Modifier', 'Edit', 'تعديل')}</span></span>
+              : <span className="text-blue-700">+ {t('Ajouter un numéro', 'Add a number', 'أضف رقماً')}</span>}
+          </button>
+        )}
       </div>
     </div>
   );
