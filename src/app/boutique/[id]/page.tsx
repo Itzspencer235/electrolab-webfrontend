@@ -487,6 +487,7 @@ function OrderModal({ product, lang, user, token, onClose }: {
   const [success,  setSuccess]  = useState(false);
   const [error,    setError]    = useState('');
 
+  const { refreshUser } = useAuth();
   const total = finalPrice(product) * qty;
 
   const t = {
@@ -547,6 +548,7 @@ function OrderModal({ product, lang, user, token, onClose }: {
         note:       note.trim(),
       }, token);
       setSuccess(true);
+      if (user && !user.phone) refreshUser(); // the server saved this phone on the profile
     } catch {
       setError('Erreur lors de la commande. Réessayez.');
     }
