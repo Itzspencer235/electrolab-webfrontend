@@ -84,9 +84,16 @@ export default function AssistantPage() {
   const fmt = (d: Date) =>
     `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
 
+  // AI replies are untrusted text: escape every HTML character first, then
+  // turn **bold** into <strong>. Without this, a reply containing HTML
+  // (e.g. <img onerror=...>) would run in the page and could read the token.
+  const escapeHtml = (s: string) => s
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
   const renderText = (text: string) =>
     text.split('\n').map((line, i) => {
-      const bold = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      const bold = escapeHtml(line).replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
       if (line.startsWith('•') || line.startsWith('-'))
         return <p key={i} className="flex gap-1.5 items-start"
           dangerouslySetInnerHTML={{ __html: '• ' + bold.replace(/^[•\-]\s*/, '') }} />;

@@ -3,13 +3,16 @@ import { useEffect, useRef, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Search, PackagePlus } from 'lucide-react';
 import { useLang } from '@/context/LangContext';
-import { getProducts, getCategories } from '@/lib/api';
+import { getProducts, getCategories, getActiveSales, type ActiveSale } from '@/lib/api';
+import { SaleBanner } from '@/components/DealsSection';
 import ProductCard from '@/components/ProductCard';
 import RequestProductModal from '@/components/RequestProductModal';
 
 function BoutiqueContent() {
   const { lang } = useLang();
   const params   = useSearchParams();
+  const [sales, setSales] = useState<ActiveSale[]>([]);
+  useEffect(() => { getActiveSales(lang).then(setSales).catch(() => setSales([])); }, [lang]);
 
   const [products,    setProducts]    = useState<any[]>([]);
   const [filtered,    setFiltered]    = useState<any[]>([]);
@@ -21,7 +24,7 @@ function BoutiqueContent() {
   const [allNames,    setAllNames]    = useState<string[] | null>(null);
   const [modal,       setModal]       = useState({ open: false, query: '', startAtForm: false });
   const promptedRef = useRef('');   // show the popup only once per search term
-  const timerRef    = useRef<ReturnType<typeof setTimeout>>();
+  const timerRef    = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const t = {
     fr: { title: 'Boutique', search: 'Rechercher un produit...', all: 'Tous', results: 'produit(s)',
@@ -79,10 +82,15 @@ function BoutiqueContent() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-10">
-      <h1 className="text-3xl font-black text-gray-800 mb-2">{t.title}</h1>
-      <p className="text-gray-500 mb-8">
-        {filtered.length} {t.results}
-      </p>
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-500 via-blue-700 to-blue-900
+                      px-6 py-8 sm:px-10 sm:py-10 mb-6 text-white shadow-xl shadow-blue-200">
+        <div className="absolute -right-12 -top-12 w-56 h-56 rounded-full bg-white/10" />
+        <div className="absolute right-32 -bottom-20 w-44 h-44 rounded-full bg-white/5" />
+        <h1 className="relative text-3xl sm:text-4xl font-black">{t.title}</h1>
+        <p className="relative text-blue-100 mt-1">{filtered.length} {t.results}</p>
+      </div>
+
+      {sales[0] && <div className="mb-6"><SaleBanner sale={sales[0]} /></div>}
 
       <div className="relative mb-6">
         <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />

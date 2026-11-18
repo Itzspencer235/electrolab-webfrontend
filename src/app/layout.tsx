@@ -13,6 +13,7 @@ import Navbar         from '@/components/Navbar';
 import Footer         from '@/components/Footer';
 import CartDrawer     from '@/components/CartDrawer';
 import WishlistDrawer from '@/components/WishlistDrawer';
+import PromoPopup     from '@/components/PromoPopup';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -52,6 +53,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <Navbar />
               <CartDrawer />
               <WishlistDrawer />
+              <PromoPopup />
               {/* pb-20 keeps the old gap above the footer, now in the page's own grey */}
               <main className="pt-16 pb-20 min-h-screen bg-gray-50">
                 {children}

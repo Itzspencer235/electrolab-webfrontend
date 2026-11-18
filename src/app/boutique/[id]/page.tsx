@@ -14,6 +14,8 @@ import { useCart }     from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { getProduct, createOrder } from '@/lib/api';
 import { formatPrice, whatsappUrl } from '@/lib/utils';
+import { finalPrice, discountOf } from '@/lib/pricing';
+import PriceTag, { DiscountBadge } from '@/components/PriceTag';
 
 export default function ProductDetailPage() {
   const { id }   = useParams<{ id: string }>();
@@ -62,9 +64,9 @@ export default function ProductDetailPage() {
   const isWished= wishlist.isWished(product._id);
 
   const waMsg = {
-    fr: `Bonjour ! Je souhaite commander : ${product.name} - ${product.price} FCFA`,
-    en: `Hello! I want to order: ${product.name} - ${product.price} FCFA`,
-    ar: `مرحباً! أريد طلب: ${product.name} - ${product.price} FCFA`,
+    fr: `Bonjour ! Je souhaite commander : ${product.name} - ${finalPrice(product)} FCFA`,
+    en: `Hello! I want to order: ${product.name} - ${finalPrice(product)} FCFA`,
+    ar: `مرحباً! أريد طلب: ${product.name} - ${finalPrice(product)} FCFA`,
   }[lang]!;
 
   const tabs = [
@@ -86,13 +88,13 @@ export default function ProductDetailPage() {
   const handleCart = () => {
     if (!user) { router.push('/login'); return; }
     if (inCart) { cart.remove(product._id); return; }
-    cart.add({ id: product._id, name: product.name, price: product.price,
+    cart.add({ id: product._id, name: product.name, price: finalPrice(product),
                imageUrl: product.imageUrl || '', category: product.category || '' });
   };
 
   const handleWish = () => {
     if (!user) { router.push('/login'); return; }
-    wishlist.toggle({ id: product._id, name: product.name, price: product.price,
+    wishlist.toggle({ id: product._id, name: product.name, price: finalPrice(product),
                       imageUrl: product.imageUrl || '', category: product.category || '' });
   };
 
@@ -195,11 +197,13 @@ export default function ProductDetailPage() {
             </div>
 
             {/* Price */}
-            <div className="flex items-baseline gap-3">
-              <span className="text-4xl font-black text-blue-700">
-                {formatPrice(product.price)}
-              </span>
+            <div className="flex items-center gap-3 flex-wrap">
+              <PriceTag product={product} size="xl" inline />
+              <DiscountBadge product={product} className="text-sm px-2.5 py-1" />
             </div>
+            {product.saleTitle && discountOf(product) > 0 && (
+              <p className="text-sm font-semibold text-red-600 -mt-2">🔥 {product.saleTitle}</p>
+            )}
 
             {/* Stock count */}
             <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold
@@ -483,7 +487,7 @@ function OrderModal({ product, lang, user, token, onClose }: {
   const [success,  setSuccess]  = useState(false);
   const [error,    setError]    = useState('');
 
-  const total = product.price * qty;
+  const total = finalPrice(product) * qty;
 
   const t = {
     fr: {
@@ -538,12 +542,10 @@ function OrderModal({ product, lang, user, token, onClose }: {
           product:  product._id,
           name:     product.name,
           quantity: qty,
-          price:    product.price,
+          price:    finalPrice(product),
         }],
-        totalPrice: total,
         note:       note.trim(),
-        status:     'pending',
-      });
+      }, token);
       setSuccess(true);
     } catch {
       setError('Erreur lors de la commande. Réessayez.');
@@ -616,7 +618,7 @@ function OrderModal({ product, lang, user, token, onClose }: {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-bold text-gray-800 text-sm truncate">{product.name}</p>
-                  <p className="text-blue-700 font-bold">{formatPrice(product.price)}/unité</p>
+                  <p className="text-blue-700 font-bold">{formatPrice(finalPrice(product))}/unité</p>
                 </div>
                 {/* Quantity */}
                 <div className="flex items-center gap-2 shrink-0">

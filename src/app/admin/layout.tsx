@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   ShieldAlert, Loader2, LayoutDashboard, Package, GraduationCap,
-  ReceiptText, Users, PackageSearch,
+  ReceiptText, Users, PackageSearch, Megaphone, BadgePercent,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useLang } from '@/context/LangContext';
@@ -62,6 +62,8 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     { href: '/admin/commandes',    icon: <ReceiptText size={18} />,     label: { fr: 'Commandes',       en: 'Orders',    ar: 'الطلبات' } },
     { href: '/admin/utilisateurs', icon: <Users size={18} />,           label: { fr: 'Utilisateurs',    en: 'Users',     ar: 'المستخدمون' } },
     { href: '/admin/demandes',     icon: <PackageSearch size={18} />,   label: { fr: 'Demandes',        en: 'Requests',  ar: 'طلبات المنتجات' } },
+    { href: '/admin/promotions',   icon: <BadgePercent size={18} />,    label: { fr: 'Promotions',      en: 'Sales & pop-ups', ar: 'العروض' } },
+    { href: '/admin/notifications', icon: <Megaphone size={18} />,      label: { fr: 'Notifications',   en: 'Notifications', ar: 'الإشعارات' } },
   ];
   const active = (href: string) =>
     href === '/admin' ? pathname === '/admin' : pathname?.startsWith(href);
