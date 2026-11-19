@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 import {
   Menu, X, ShoppingCart, Heart, Globe,
-  User, LogOut, ChevronDown, ShieldCheck,
+  User, LogOut, ChevronDown, ShieldCheck, Volume2, VolumeX,
 } from 'lucide-react';
 import { useLang }     from '@/context/LangContext';
 import { useAuth }     from '@/context/AuthContext';
@@ -13,6 +13,7 @@ import { useCart }     from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { NAV_LINKS, WHATSAPP_NUMBER } from '@/lib/constants';
 import type { Lang } from '@/lib/constants';
+import { isSoundOn, setSoundOn, onSoundChange } from '@/lib/sound';
 import logo from '@/assets/images/logo.png';
 
 export default function Navbar() {
@@ -25,6 +26,16 @@ export default function Navbar() {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [langOpen,     setLangOpen]     = useState(false);
   const pathname = usePathname();
+  const [soundOn, setSoundOnState] = useState(true);
+  useEffect(() => {
+    setSoundOnState(isSoundOn());
+    return onSoundChange(() => setSoundOnState(isSoundOn()));
+  }, []);
+  const soundLabel = {
+    fr: soundOn ? 'Couper les sons' : 'Activer les sons',
+    en: soundOn ? 'Mute sounds'     : 'Turn sounds on',
+    ar: soundOn ? 'كتم الأصوات'      : 'تشغيل الأصوات',
+  }[lang];
 
   // Close menus when navigating
   useEffect(() => { setMobileOpen(false); setUserMenuOpen(false); setLangOpen(false); }, [pathname]);
@@ -90,6 +101,14 @@ export default function Navbar() {
               ))}
             </div>
           </div>
+
+          {/* Sound effects on/off */}
+          <button onClick={() => setSoundOn(!soundOn)} aria-label={soundLabel} title={soundLabel}
+            aria-pressed={soundOn}
+            className="hidden sm:block p-2 rounded-lg text-gray-600 hover:bg-blue-50
+                       hover:text-blue-700 transition">
+            {soundOn ? <Volume2 size={18} /> : <VolumeX size={18} />}
+          </button>
 
           {/* Wishlist */}
           <button onClick={() => wishlist.setOpen(true)}
@@ -227,6 +246,11 @@ export default function Navbar() {
               </button>
             ))}
           </div>
+          <button onClick={() => setSoundOn(!soundOn)} aria-pressed={soundOn}
+            className="flex w-full items-center gap-2 px-4 py-3 mt-2 rounded-xl text-gray-700
+                       hover:bg-blue-50 hover:text-blue-700 font-medium transition">
+            {soundOn ? <Volume2 size={16} /> : <VolumeX size={16} />} {soundLabel}
+          </button>
           {!user && (
             <Link href="/login" onClick={() => setMobileOpen(false)}
               className="block px-4 py-3 rounded-xl bg-blue-700 text-white

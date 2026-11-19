@@ -13,6 +13,7 @@ import { useAuth }     from '@/context/AuthContext';
 import { useCart }     from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { getProduct, createOrder } from '@/lib/api';
+import { playSound } from '@/lib/sound';
 import { formatPrice, whatsappUrl } from '@/lib/utils';
 import { finalPrice, discountOf } from '@/lib/pricing';
 import PriceTag, { DiscountBadge } from '@/components/PriceTag';
@@ -547,9 +548,11 @@ function OrderModal({ product, lang, user, token, onClose }: {
         }],
         note:       note.trim(),
       }, token);
+      playSound('success');
       setSuccess(true);
       if (user && !user.phone) refreshUser(); // the server saved this phone on the profile
     } catch {
+      playSound('error');
       setError('Erreur lors de la commande. Réessayez.');
     }
     setLoading(false);

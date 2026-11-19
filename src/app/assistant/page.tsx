@@ -4,6 +4,7 @@ import { Send, Bot, User, Trash2, Lock } from 'lucide-react';
 import { useLang } from '@/context/LangContext';
 import { useAuth } from '@/context/AuthContext';
 import { sendChat } from '@/lib/api';
+import { playSound } from '@/lib/sound';
 import Link from 'next/link';
 
 interface Msg { role: 'user' | 'bot'; text: string; time: Date; }
@@ -75,7 +76,9 @@ export default function AssistantPage() {
       const { reply } = await sendChat(msg, lang, history.slice(-10));
       setMsgs(m => [...m, { role: 'bot', text: reply, time: new Date() }]);
       setHistory(h => [...h, { role: 'model', text: reply }]);
+      playSound('notify');
     } catch {
+      playSound('error');
       setMsgs(m => [...m, { role: 'bot', text: '❌ Erreur.', time: new Date() }]);
     }
     setLoading(false);

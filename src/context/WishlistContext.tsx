@@ -4,6 +4,7 @@ import {
   useEffect, useRef, ReactNode,
 } from 'react';
 import { syncWishlistAPI, getWishlist } from '@/lib/api';
+import { playSound } from '@/lib/sound';
 
 export interface WishItem {
   id: string; name: string; price: number;
@@ -117,13 +118,14 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
   };
 
   const toggle = (item: WishItem) => {
+    playSound(items.some(i => i.id === item.id) ? 'cart_remove' : 'like');
     setItems(prev => {
       const exists = prev.find(i => i.id === item.id);
       return exists ? prev.filter(i => i.id !== item.id) : [...prev, item];
     });
   };
 
-  const remove   = (id: string) => setItems(p => p.filter(i => i.id !== id));
+  const remove   = (id: string) => { playSound('cart_remove'); setItems(p => p.filter(i => i.id !== id)); };
   const isWished = (id: string) => items.some(i => i.id === id);
 
   return (
