@@ -161,7 +161,7 @@ export default function AdminNotificationsPage() {
               icon={<Smartphone size={18} />}
               title={tr(lang, 'Dans l\'app + push', 'In the app + push', 'في التطبيق + إشعار فوري')}
               note={status && !status.push
-                ? tr(lang, 'Push non configuré sur le serveur : visible seulement dans la liste de l\'app',
+                ? tr(lang, 'Push non configuré sur le serveur (FIREBASE_SERVICE_ACCOUNT) : visible seulement dans la liste de l\'app',
                     'Push not configured on the server: only shown in the app list', 'الإشعار الفوري غير مهيأ: يظهر داخل التطبيق فقط')
                 : tr(lang, 'Liste des notifications + notification sur le téléphone', 'Notification list + phone notification', 'قائمة الإشعارات + إشعار على الهاتف')}
               warn={!!status && !status.push}
@@ -171,7 +171,7 @@ export default function AdminNotificationsPage() {
               icon={<Mail size={18} />}
               title="Email"
               note={status && !status.email
-                ? tr(lang, 'Email non configuré sur le serveur (RESEND_API_KEY)', 'Email not configured on the server (RESEND_API_KEY)', 'البريد غير مهيأ على الخادم')
+                ? tr(lang, 'Email non configuré sur le serveur (BREVO_API_KEY)', 'Email not configured on the server (BREVO_API_KEY)', 'البريد غير مهيأ على الخادم')
                 : tr(lang, 'Seulement aux comptes qui ont un email', 'Only to accounts with an email', 'فقط للحسابات التي لديها بريد')}
               warn={!!status && !status.email}
             />
