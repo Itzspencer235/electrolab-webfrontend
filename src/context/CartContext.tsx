@@ -4,6 +4,7 @@ import {
   useEffect, useRef, ReactNode,
 } from 'react';
 import { syncCartAPI, getCart } from '@/lib/api';
+import { playSound } from '@/lib/sound';
 
 export interface CartItem {
   id: string; name: string; price: number;
@@ -128,6 +129,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const total = items.reduce((s, i) => s + i.price * i.quantity, 0);
 
   const add = (item: Omit<CartItem, 'quantity'>) => {
+    playSound('cart_add');
     setItems(prev => {
       const idx = prev.findIndex(i => i.id === item.id);
       if (idx >= 0) {
@@ -140,12 +142,18 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setOpen(true);
   };
 
-  const remove    = (id: string) => setItems(p => p.filter(i => i.id !== id));
+  const remove    = (id: string) => {
+    playSound('cart_remove');
+    setItems(p => p.filter(i => i.id !== id));
+  };
   const increment = (id: string) => setItems(p =>
     p.map(i => i.id === id ? { ...i, quantity: i.quantity + 1 } : i));
-  const decrement = (id: string) => setItems(p =>
-    p.map(i => i.id === id ? { ...i, quantity: i.quantity - 1 } : i)
-     .filter(i => i.quantity > 0));
+  const decrement = (id: string) => {
+    if ((items.find(i => i.id === id)?.quantity ?? 0) <= 1) playSound('cart_remove');
+    setItems(p =>
+      p.map(i => i.id === id ? { ...i, quantity: i.quantity - 1 } : i)
+       .filter(i => i.quantity > 0));
+  };
   const clear    = () => { setItems([]); localStorage.removeItem('el_cart'); };
   const isInCart = (id: string) => items.some(i => i.id === id);
 
