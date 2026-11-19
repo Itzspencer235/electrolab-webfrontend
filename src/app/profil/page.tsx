@@ -15,6 +15,7 @@ import { useLang }     from '@/context/LangContext';
 import { formatPrice, WHATSAPP_DIGITS } from '@/lib/utils';
 import API             from '@/lib/api';
 import MyRequests      from '@/components/MyRequests';
+import { PRIVACY_URL } from '@/lib/constants';
 
 type Tab = 'profile' | 'orders' | 'wishlist' | 'cart' | 'requests';
 
@@ -210,6 +211,14 @@ export default function ProfilPage() {
             </Link>
           </div>
         )}
+      </div>
+
+      {/* ── Delete account (also required in the mobile apps) ─────────────────── */}
+      <div className="flex flex-wrap justify-end gap-x-4 gap-y-1 -mt-3 mb-5 text-xs text-gray-500">
+        <a href={`${PRIVACY_URL}?lang=${lang}`} className="hover:text-gray-700 underline">
+          {lang === 'en' ? 'Privacy policy' : lang === 'ar' ? 'سياسة الخصوصية' : 'Politique de confidentialité'}
+        </a>
+        <DeleteAccountButton lang={lang} token={token} onDeleted={() => { logout(); router.push('/'); }} />
       </div>
 
       {/* ── Tabs ─────────────────────────────────────────────────────────────── */}
@@ -656,5 +665,39 @@ function PhoneRow({ lang }: { lang: 'fr' | 'en' | 'ar' }) {
         )}
       </div>
     </div>
+  );
+}
+
+
+// Deletes the signed-in account (same as Settings → Delete my account in the app).
+function DeleteAccountButton({ lang, token, onDeleted }: {
+  lang: string; token: string | null; onDeleted: () => void;
+}) {
+  const [busy, setBusy] = useState(false);
+  const t = (fr: string, en: string, ar: string) => (lang === 'en' ? en : lang === 'ar' ? ar : fr);
+
+  const run = async () => {
+    if (!token || busy) return;
+    if (!window.confirm(t(
+      'Supprimer définitivement votre compte, votre panier, vos favoris, vos notifications et vos demandes de produits ? Cette action est irréversible.',
+      'Permanently delete your account, cart, wishlist, notifications and product requests? This cannot be undone.',
+      'حذف حسابك وسلتك ومفضلتك وإشعاراتك وطلبات المنتجات نهائياً؟ لا يمكن التراجع عن ذلك.'))) return;
+    setBusy(true);
+    try {
+      await API.delete('/users/me', { headers: { Authorization: `Bearer ${token}` } });
+      window.alert(t('Votre compte a été supprimé.', 'Your account was deleted.', 'تم حذف حسابك.'));
+      onDeleted();
+    } catch (e: any) {
+      window.alert(e?.response?.data?.message || t('Suppression impossible. Réessayez.', 'Could not delete. Try again.', 'تعذّر الحذف. حاول مجدداً.'));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <button onClick={run} disabled={busy}
+      className="text-red-500 hover:text-red-700 underline disabled:opacity-50">
+      {busy ? '…' : t('Supprimer mon compte', 'Delete my account', 'حذف حسابي')}
+    </button>
   );
 }

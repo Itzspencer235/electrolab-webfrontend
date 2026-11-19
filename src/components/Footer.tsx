@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useLang } from '@/context/LangContext';
-import { WHATSAPP_NUMBER } from '@/lib/constants';
+import { WHATSAPP_NUMBER, PRIVACY_URL, DELETE_ACCOUNT_URL } from '@/lib/constants';
 import { MapPin, Phone, Mail } from 'lucide-react';
 import logo from '@/assets/images/icon.png';
 
@@ -12,13 +12,16 @@ export default function Footer() {
   const t = {
     fr: { desc: 'Boutique d\'électronique & plateforme d\'apprentissage Arduino, ESP32 et IoT au Tchad.',
           links: 'Liens', shop: 'Boutique', tutos: 'Tutoriels', ai: 'Assistant IA',
-          contact: 'Contact', rights: 'Tous droits réservés' },
+          contact: 'Contact', rights: 'Tous droits réservés',
+          privacy: 'Confidentialité', deleteAcc: 'Supprimer mon compte' },
     en: { desc: 'Electronics shop & Arduino, ESP32 and IoT learning platform in Chad.',
           links: 'Links', shop: 'Shop', tutos: 'Tutorials', ai: 'AI Assistant',
-          contact: 'Contact', rights: 'All rights reserved' },
+          contact: 'Contact', rights: 'All rights reserved',
+          privacy: 'Privacy', deleteAcc: 'Delete my account' },
     ar: { desc: 'متجر إلكترونيات ومنصة تعلم Arduino وESP32 وإنترنت الأشياء في تشاد.',
           links: 'روابط', shop: 'المتجر', tutos: 'الدروس', ai: 'المساعد الذكي',
-          contact: 'تواصل', rights: 'جميع الحقوق محفوظة' },
+          contact: 'تواصل', rights: 'جميع الحقوق محفوظة',
+          privacy: 'الخصوصية', deleteAcc: 'حذف حسابي' },
   }[lang];
 
   return (
@@ -79,6 +82,10 @@ export default function Footer() {
 
       <div className="border-t border-blue-900 py-4 text-center text-blue-400 text-xs">
         © {new Date().getFullYear()} IP ElectroLab — {t.rights}
+        {' · '}
+        <a href={`${PRIVACY_URL}?lang=${lang}`} className="hover:text-white transition">{t.privacy}</a>
+        {' · '}
+        <a href={`${DELETE_ACCOUNT_URL}?lang=${lang}`} className="hover:text-white transition">{t.deleteAcc}</a>
       </div>
     </footer>
   );
